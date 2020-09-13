@@ -388,7 +388,7 @@ int seri_logic_calc(int line,int signal_line[][7],int pointer[]){//1bitの論理
 	return logic_out;
 }
 
-void para_logic_calc(int line, int signal_bit[],int signal_line[][7],int pointer[]){//32bitの論理演算用
+void para_logic_calc(int line, unsigned int signal_bit[],int signal_line[][7],int pointer[]){//32bitの論理演算用
 	int result;
 	int i,j;
 	switch(signal_line[line][0]){
@@ -468,8 +468,8 @@ void para_logic_calc(int line, int signal_bit[],int signal_line[][7],int pointer
 	}
 }
 
-int pow2(int times){
-	int result=1;
+unsigned int pow2(int times){
+	unsigned int result=1;
 	for(int i=0; i<times; i++){
 		result*=2;
 	}

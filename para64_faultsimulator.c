@@ -524,35 +524,6 @@ void main(int argc, char *argv[]){
 	for(i=0; i<PO_lists; i++){
 		fscanf(fp,"%d",&PO_signal[i]);
 	}
-	
-	//外部出力信号線の番号を昇順にソート
-	/*
-	int PO_tmp;
-	for(i=0; i<PO_lists; i++){
-		for(j=i; j<PO_lists; j++){
-			if(PO_signal[i]>PO_signal[j]){
-				PO_tmp=PO_signal[i];
-				PO_signal[i]=PO_signal[j];
-				PO_signal[j]=PO_tmp;
-			}
-		}
-	}*/
-
-	/*
-	printf("------------------\n");
-	for(i=0; i<pointer_lines; i++){
-		printf("%d\n",pointer[i]);
-	}
-	printf("-------------------\n");
-	for(i=0; i<PI_lists; i++){
-		printf("%d\n",PI_signal[i]);
-	}
-	printf("--------------------\n");
-	for(i=0; i<PO_lists; i++){
-		printf("%d\n",PO_signal[i]);
-	}
-	printf("\n\n");
-	*/
 
 	fclose(fp);
 
@@ -622,14 +593,13 @@ void main(int argc, char *argv[]){
 	}
 
 	//故障シミュレーション
-	unsigned long long int signal_bit[signal_lines];//int>unsigned int
+	unsigned long long int signal_bit[signal_lines];//unsigned int(32)>unsigned long long int(64)
 	unsigned long long int mask_bit; //故障追加のためのマスク
 	int PI_signal_cnt;
 	int test_cnt,rep_cnt;
 	int rep_sum=0; //検出した故障の合計数
 	int return_num; //int型論理演算関数の返り値の行き先(バグ回避用)
 	int fault_remain=fault_lists; //故障リストの残り数
-	//int flag=0;
 	int tmp; //故障リストのエントリ入れ替え用
 	int par; //故障並列の数
 
@@ -653,26 +623,24 @@ void main(int argc, char *argv[]){
 			}
 		}
 		
-		//for(rep_cnt=0; rep_cnt<fault_remain; rep_cnt++){
-		rep_cnt=0;//tuika
+		rep_cnt=0;
 		//故障リストの故障数が64個未満なら並列数を調整
-		if(rep_cnt+64>fault_remain){//tuika
+		if(rep_cnt+64>fault_remain){
 			par=fault_remain;
 		}
 		else{
 			par=64;
 		}
 
-		while(rep_cnt<fault_remain){//tuika
+		while(rep_cnt<fault_remain){
 			
 			//故障追加、故障が追加された信号線にはフラグを立てておく
-			for(i=0; i<signal_lines; i++){//tuika
+			for(i=0; i<signal_lines; i++){
 				signal_line[i][6]=-1;
 				signal_bit[i]=0b0;
 			}
-			for(i=0; i<PI_lists; i++){//tuika
+			for(i=0; i<PI_lists; i++){
 				if(signal_line[PI_signal[i]-1][5]==0||signal_line[PI_signal[i]-1][5]==1){
-					//signal_bit[PI_signal[i]-1]=0b0;
 					if(signal_line[PI_signal[i]-1][5]==1){//外部入力が1(ALL1のビット列)
 						signal_bit[PI_signal[i]-1]=~signal_bit[PI_signal[i]-1];
 					}
@@ -682,29 +650,14 @@ void main(int argc, char *argv[]){
 					exit(1);
 				}
 			}
-			for(k=0; k<par; k++){//tuika
+			for(k=0; k<par; k++){
 				signal_line[faultData[rep_cnt+k][0]-1][6]=1;
 			}
-
-			/*
-			for(i=0; i<lines; i++){
-				if(faultData[rep_cnt][0]-1==i){
-					if(faultData[rep_cnt][1]==1){
-						signal_line[i][6]=1;
-					}
-					else if(faultData[rep_cnt][1]==0){
-						signal_line[i][6]=0;
-					}
-				}
-				else{
-					signal_line[i][6]=-1;
-				}
-			}*/
 			
 			for(i=0; i<signal_lines; i++){
 				j=sort[i];
 
-				if(signal_line[j][0]==0){//tuika
+				if(signal_line[j][0]==0){
 					if(signal_line[j][6]!=-1){
 						for(k=0; k<par; k++){
 							if(faultData[rep_cnt+k][0]-1==j){
@@ -721,26 +674,8 @@ void main(int argc, char *argv[]){
 						}
 					}
 				}
-
-				/*
-				if(signal_line[j][0]==0){
-					if(signal_line[j][6]!=-1){
-						if(faultData[rep_cnt][0]-1==j){
-							if(signal_line[j][6]==0){
-								signal_bit[j]=signal_line[j][5]&0;
-							}
-							else if(signal_line[j][6]==1){
-								signal_bit[j]=signal_line[j][5]|1;
-							}
-						}
-					}
-					else{
-						signal_bit[j]=signal_line[j][5];
-					}
-				}*/
 				
 				else if(signal_line[j][0]==4){
-					///////////////////////////////tuika
 					//正常出力と比較
 					if(signal_line[j][5]==1){
 						mask_bit=0b0;
@@ -760,42 +695,10 @@ void main(int argc, char *argv[]){
 								rep_sum++;
 								faultData[rep_cnt+k][2]=1;
 							}
-					////////////////////////////////////////	
-					/*
-					signal_bit[j]=signal_bit[signal_line[j][2]-1]^signal_line[j][5];
-					for(k=0; k<1; k++){
-						if((signal_bit[j]>>k)&1==1){
-							
-							if(faultData[rep_cnt+k][2]==-1){//tuika
-								rep_sum++;
-								faultData[rep_cnt+k][2]=1;
-								printf("tuika ");
-							}*/
-							///////////////
-							/*
-							rep_sum++;
-							flag=1;
-							printf("tuika ");
-							for(l=0; l<2; l++){
-								tmp=faultData[rep_cnt][l];
-								faultData[rep_cnt][l]=faultData[fault_remain-1][l];
-								faultData[fault_remain-1][l]=tmp;
-							}
-							fault_remain--;
-							rep_cnt--;
-							*/
-							/////////////////
 						}
 					}
-					/////////
-					/*
-					if(flag==1){
-						flag=0;
-						break;
-					}*/
-					///////////
 				}
-				else{//tuika
+				else{
 					para_logic_calc(j,signal_bit,signal_line,pointer);
 					if(signal_line[j][6]!=-1){
 						for(k=0; k<par; k++){
@@ -813,20 +716,8 @@ void main(int argc, char *argv[]){
 						}
 					}
 				}
-				/*
-				else{
-					logic_calc2(j,signal_bit,signal_line,pointer);	
-					if(signal_line[j][6]!=-1){
-						if(signal_line[j][6]==0){
-							signal_bit[j]&=0;
-						}
-						else if(signal_line[j][6]==1){
-							signal_bit[j]|=1;
-						}
-					}
-				}*/
 			}
-			//次の故障セット(32個)、次の故障セットが32個未満なら調整			
+			//次の故障セット(64個)、次の故障セットが64個未満なら調整			
 			rep_cnt+=64;
 			if(rep_cnt+64>fault_remain){
 				par=fault_remain-rep_cnt;
